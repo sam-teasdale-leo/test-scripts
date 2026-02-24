@@ -23,7 +23,7 @@ RESPONSE=$(curl -s -X POST 'http://10.170.1.142:4000/api/v1/authentication/token
   \"passwordless_login_code\": \"$CODE\"
 }")
 
-# echo "$RESPONSE" | jq .
+echo "$RESPONSE" | jq .
 
 # Extract token and refresh_token from response
 TOKEN=$(echo "$RESPONSE" | jq -r '.token')
@@ -36,19 +36,20 @@ echo
 
 # Step 3: Refresh the token
 echo "Step 3: Refreshing the token..."
-RESPONSE=$(curl -s -X POST 'http://10.170.1.142:4000/api/v1/authentication/token-refresh' \
+REFRESH_RESPONSE=$(curl -s -X POST 'http://10.170.1.142:4000/api/v1/authentication/token-refresh' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{
   \"token\": \"$TOKEN\",
   \"refresh_token\": \"$REFRESH_TOKEN\"
 }")
 
-# echo "$RESPONSE" | jq .
+echo "$REFRESH_RESPONSE" | jq .
 
 # Extract updated token and refresh_token from response
-TOKEN=$(echo "$RESPONSE" | jq -r '.token')
-REFRESH_TOKEN=$(echo "$RESPONSE" | jq -r '.refresh_token')
+TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r '.token')
+REFRESH_TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r '.refresh_token')
 
 echo
 echo "Token: ${TOKEN:0:100}..."

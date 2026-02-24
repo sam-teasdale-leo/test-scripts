@@ -35,10 +35,22 @@ echo
 
 # Step 3: Refresh the token
 echo "Step 3: Refreshing the token..."
-curl -s -X POST 'https://imply-edge-server.verus-development.development.threatdeterrence.com/api/v1/authentication/token-refresh' \
+REFRESH_RESPONSE=$(curl -s -X POST 'https://imply-edge-server.verus-development.development.threatdeterrence.com/api/v1/authentication/token-refresh' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $TOKEN" \
   -d "{
   \"token\": \"$TOKEN\",
   \"refresh_token\": \"$REFRESH_TOKEN\"
-}" | jq .
+}")
+
+echo "$REFRESH_RESPONSE" | jq .
+
+# Extract updated token and refresh_token from response
+TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r '.token')
+REFRESH_TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r '.refresh_token')
+
+echo
+echo "Token: ${TOKEN:0:100}..."
+echo "Refresh Token: ${REFRESH_TOKEN:0:100}..."
+echo
