@@ -188,6 +188,23 @@ fi
 echo "cluster=$CTX  namespace=$NS  rds=${PGHOST}:${REMOTE_PORT}  db=$PGDB  user=$PGUSER  pod=$POD  local-port=$LOCAL_PORT  deadline=${DEADLINE}s"
 echo "password source: $PASS_SRC"
 
+# --- guard rail: warn loudly when this is the production cluster --------------
+# Matched by the EKS cluster ARN (the current-context above), not the namespace,
+# so it can't be fooled by a tenant naming convention.
+PROD_CTX="arn:aws:eks:us-east-1:126427819807:cluster/verus"
+if [ "$CTX" = "$PROD_CTX" ]; then
+  echo >&2
+  echo "  ⚠  You're about to open a connection to the '$NS' PRODUCTION database." >&2
+  echo "     Proceed with caution. Database changes impact real production data." >&2
+  echo >&2
+  printf 'Are you sure you'\''d like to proceed? y/n ' >&2
+  read -r reply </dev/tty
+  case "$reply" in
+    y|Y|yes|YES) ;;
+    *) echo "Aborted." >&2; exit 1 ;;
+  esac
+fi
+
 # --- bail early if the local port is taken (e.g. a local Postgres) ------------
 if nc -z localhost "$LOCAL_PORT" 2>/dev/null; then
   echo "Local port $LOCAL_PORT is already in use — pass a different [local-port]." >&2
